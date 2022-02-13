@@ -44,12 +44,15 @@ def Draw(draw_info, algo, ascending):
                                   draw_info.Selected_Color)
     draw_info.window.blit(title, (draw_info.width / 2 - title.get_width() / 2, 5))
 
-    controls = draw_info.Font.render("R - Reset | SPACE - Start Sorting | A - Ascending | D - Descending", 1,
-                                     draw_info.Font_Color)
+    controls = draw_info.Font.render("R - Reset | SPACE - Start Sorting | A - Ascending | D - Descending "
+                                     "| + - Increase Size of Array", 1, draw_info.Font_Color)
     draw_info.window.blit(controls, (draw_info.width / 2 - controls.get_width() / 2, 45))
+    controls = draw_info.Font.render("S - Sine Function"
+                                     "", 1, draw_info.Font_Color)
+    draw_info.window.blit(controls, (draw_info.width / 2 - controls.get_width() / 2, 75))
 
-    sorting = draw_info.Font.render("I - Insertion Sort | B - Bubble Sort", 1, draw_info.Font_Color)
-    draw_info.window.blit(sorting, (draw_info.width / 2 - sorting.get_width() / 2, 75))
+    sorting = draw_info.Font.render("M - Merge Sort | B - Bubble Sort", 1, draw_info.Font_Color)
+    draw_info.window.blit(sorting, (draw_info.width / 2 - sorting.get_width() / 2, 105))
 
     draw_arr(draw_info)
     pygame.display.update()
@@ -78,10 +81,13 @@ def draw_arr(draw_info, color_pos={}, clear_bg=False):
         pygame.display.update()
 
 
-def Random_Arr(n, min_value, max_value):
+def Random_Arr(n, min_value, max_value, sine):
     arr = []
     for _ in range(n):
-        val = rand.randint(min_value, max_value)
+        if sine:
+            val = math.sin(rand.randint(min_value, max_value))
+        else:
+            val = rand.randint(min_value, max_value)
         arr.append(val)
     return arr
 
@@ -100,6 +106,44 @@ def Bubble_Sort(draw_info, ascending=True):
 
     return arr
 
+# Fix Me: Doesn't Fully Sort the Array?
+
+
+def Merge_Sort(draw_info, ascending=True):
+    arr = draw_info.arr
+    if len(arr) > 1:
+        mid = len(arr) // 2
+
+        l = arr[:mid]
+        r = arr[mid:]
+
+        Merge_Sort(l)
+        Merge_Sort(r)
+
+        i = j = k = 0
+        while i < len(l) and j < len(r):
+            if l[i] < r[j]:
+                arr[k] = l[i]
+                draw_arr(draw_info, {i: draw_info.Selected_Color, k: draw_info.Near_Color}, True)
+                i += 1
+            else:
+                arr[k] = r[j]
+                draw_arr(draw_info, {j: draw_info.Selected_Color, k: draw_info.Near_Color}, True)
+                j += 1
+            k += 1
+
+        while i < len(l):
+            arr[k] = l[i]
+            i += 1
+            k += 1
+
+        while j < len(r):
+            arr[k] = r[j]
+            j += 1
+            k += 1
+    return arr
+    yield True
+
 
 def main():
     run = True
@@ -108,8 +152,9 @@ def main():
     n = 50
     min_value = 0
     max_value = 100
+    sine = False
 
-    arr = Random_Arr(n, min_value, max_value)
+    arr = Random_Arr(n, min_value, max_value, sine)
     draw_info = DrawInfo(1280, 720, arr)
 
     sorting = False
@@ -138,12 +183,16 @@ def main():
 
             if event.key == pygame.K_PLUS:
                 n += 10
-                lst = Random_Arr(n, min_value, max_value)
+                lst = Random_Arr(n, min_value, max_value, sine)
                 draw_info.Set_List(lst)
                 sorting = False
-
+            if event.key == pygame.K_s:
+                sine = True
+                lst = Random_Arr(n, min_value, max_value, sine)
+                draw_info.Set_List(lst)
+                sorting = False
             if event.key == pygame.K_r:
-                lst = Random_Arr(n, min_value, max_value)
+                lst = Random_Arr(n, min_value, max_value, sine)
                 draw_info.Set_List(lst)
                 sorting = False
             elif event.key == pygame.K_SPACE and sorting == False:
@@ -153,10 +202,9 @@ def main():
                 ascending = True
             elif event.key == pygame.K_d and not sorting:
                 ascending = False
-            elif event.key == pygame.K_i and not sorting:
-                pass
-                # sorting_algo = Insertion_Sort()
-                # algo_name = "Insertion Sort"
+            elif event.key == pygame.K_m and not sorting:
+                sorting_algo = Merge_Sort
+                algo_name = "Merge Sort"
             elif event.key == pygame.K_b and not sorting:
                 sorting_algo = Bubble_Sort
                 algo_name = "Bubble Sort"
