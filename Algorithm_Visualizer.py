@@ -108,6 +108,10 @@ def Bubble_Sort(draw_info, ascending=True):
 
 # Fix Me: Doesn't Fully Sort the Array?
 
+# FIX!! RECURSION DOESNT SEND BACK DRAW INFO!!!!
+
+# CALLS DRAW_INFO.ARR BUT L NOR R HAS DRAW_INFO.ARR;  DRAW_INFO SHOULD BE THE DrawInfo CLASS !!!!!!!
+
 
 def Merge_Sort(draw_info, ascending=True):
     arr = draw_info.arr
