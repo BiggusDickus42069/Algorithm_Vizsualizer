@@ -106,47 +106,58 @@ def Bubble_Sort(draw_info, ascending=True):
 
     return arr
 
-# Fix Me: Doesn't Fully Sort the Array?
+# Add The Function to draw
 
-# FIX!! RECURSION DOESNT SEND BACK DRAW INFO!!!!
 
-# CALLS DRAW_INFO.ARR BUT L NOR R HAS DRAW_INFO.ARR;  DRAW_INFO SHOULD BE THE DrawInfo CLASS !!!!!!!
+def Merge(a, l, m, r):
+    n1 = m - l + 1
+    n2 = r - m
+    L = [0] * n1
+    R = [0] * n2
+    for i in range(0, n1):
+        L[i] = a[l + i]
+    for i in range(0, n2):
+        R[i] = a[m + i + 1]
+
+    i, j, k = 0, 0, l
+    while i < n1 and j < n2:
+        if L[i] > R[j]:
+            a[k] = R[j]
+            j += 1
+        else:
+            a[k] = L[i]
+            i += 1
+        k += 1
+
+    while i < n1:
+        a[k] = L[i]
+        i += 1
+        k += 1
+
+    while j < n2:
+        a[k] = R[j]
+        j += 1
+        k += 1
 
 
 def Merge_Sort(draw_info, ascending=True):
     arr = draw_info.arr
-    if len(arr) > 1:
-        mid = len(arr) // 2
+    width = 0
+    n = len(arr)
+    while width < n:
+        l = 0
+        while l < n:
+            r = min(l + (width * 2 - 1), n - 1)
+            m = (l + r) // 2
 
-        l = arr[:mid]
-        r = arr[mid:]
-
-        Merge_Sort(l)
-        Merge_Sort(r)
-
-        i = j = k = 0
-        while i < len(l) and j < len(r):
-            if l[i] < r[j]:
-                arr[k] = l[i]
-                draw_arr(draw_info, {i: draw_info.Selected_Color, k: draw_info.Near_Color}, True)
-                i += 1
-            else:
-                arr[k] = r[j]
-                draw_arr(draw_info, {j: draw_info.Selected_Color, k: draw_info.Near_Color}, True)
-                j += 1
-            k += 1
-
-        while i < len(l):
-            arr[k] = l[i]
-            i += 1
-            k += 1
-
-        while j < len(r):
-            arr[k] = r[j]
-            j += 1
-            k += 1
+            if width > n // 2:
+                m = r - (n % width)
+            Merge(arr, l, m, r)
+            l += width * 2
+        width *= 2
     return arr
-    yield True
+
+# End line
 
 
 def main():
