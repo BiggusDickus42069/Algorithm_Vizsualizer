@@ -5,14 +5,16 @@ import math
 pygame.init()
 
 
+
 class DrawInfo:
     Bg_Color = 223, 223, 223  # White
     Font_Color = 0, 0, 0  # Pure Black
     Near_Color = 180, 0, 0  # Red
     Selected_Color = 0, 180, 0  # Green
+    Mid_Color = 0, 0, 255  # Blue
 
     Gradients = [
-        (157, 157, 157), (123, 123, 123), (80, 80, 80)
+        (157, 157, 157), (123, 123, 123), (80, 80, 80), (50, 50, 50)
     ]
     Font = pygame.font.SysFont('comicsans', 30)
 
@@ -37,7 +39,7 @@ class DrawInfo:
         self.start_x = self.X_Pad // 2
 
 
-def Draw(draw_info, algo, ascending):
+def Draw(draw_info, algo, ascending, x):
     draw_info.window.fill(draw_info.Bg_Color)
 
     title = draw_info.Font.render(f"{algo} - {'Ascending' if ascending else 'Descending'}", 1,
@@ -45,14 +47,18 @@ def Draw(draw_info, algo, ascending):
     draw_info.window.blit(title, (draw_info.width / 2 - title.get_width() / 2, 5))
 
     controls = draw_info.Font.render("R - Reset | SPACE - Start Sorting | A - Ascending | D - Descending "
-                                     "| + - Increase Size of Array", 1, draw_info.Font_Color)
+                                     "| + - Increase Size of Array | - - Decrease Size of Array",
+                                     1, draw_info.Font_Color)
     draw_info.window.blit(controls, (draw_info.width / 2 - controls.get_width() / 2, 45))
     controls = draw_info.Font.render("S - Sine Function"
                                      "", 1, draw_info.Font_Color)
     draw_info.window.blit(controls, (draw_info.width / 2 - controls.get_width() / 2, 75))
 
-    sorting = draw_info.Font.render("M - Merge Sort | B - Bubble Sort", 1, draw_info.Font_Color)
+    sorting = draw_info.Font.render("N - Binary Search | B - Bubble Sort", 1, draw_info.Font_Color)
     draw_info.window.blit(sorting, (draw_info.width / 2 - sorting.get_width() / 2, 105))
+
+    searching = draw_info.Font.render("Searching for " + str(x), 1, draw_info.Font_Color)
+    draw_info.window.blit(searching, (draw_info.width / 2 - searching.get_width() / 2, 135))
 
     draw_arr(draw_info)
     pygame.display.update()
@@ -106,63 +112,41 @@ def Bubble_Sort(draw_info, ascending=True):
 
     return arr
 
-# Add The Function to draw
+# Literally to god damm fast
+# Fails to continue highlighting on last block
 
 
-def Merge(a, l, m, r):
-    n1 = m - l + 1
-    n2 = r - m
-    L = [0] * n1
-    R = [0] * n2
-    for i in range(0, n1):
-        L[i] = a[l + i]
-    for i in range(0, n2):
-        R[i] = a[m + i + 1]
-
-    i, j, k = 0, 0, l
-    while i < n1 and j < n2:
-        if L[i] > R[j]:
-            a[k] = R[j]
-            j += 1
-        else:
-            a[k] = L[i]
-            i += 1
-        k += 1
-
-    while i < n1:
-        a[k] = L[i]
-        i += 1
-        k += 1
-
-    while j < n2:
-        a[k] = R[j]
-        j += 1
-        k += 1
-
-
-def Merge_Sort(draw_info, ascending=True):
+def B_Search(draw_info, x, ascending=True):
     arr = draw_info.arr
-    width = 0
-    n = len(arr)
-    while width < n:
-        l = 0
-        while l < n:
-            r = min(l + (width * 2 - 1), n - 1)
-            m = (l + r) // 2
 
-            if width > n // 2:
-                m = r - (n % width)
-            Merge(arr, l, m, r)
-            l += width * 2
-        width *= 2
-    return arr
+    low = 0
+    high = len(arr) - 1
+    mid = None
 
-# End line
+    while low <= high:
+        mid = (high + low) // 2
+        draw_arr(draw_info, {mid: draw_info.Mid_Color}, True)
+        if arr[mid] < x:
+            low = mid + 1
+            draw_arr(draw_info, {low: draw_info.Selected_Color, high: draw_info.Near_Color}, True)
+            yield True
+        elif arr[mid] > x:
+            high = mid - 1
+            draw_arr(draw_info, {high: draw_info.Selected_Color, low: draw_info.Near_Color}, True)
+            yield True
+        elif arr[mid] == x:
+            draw_arr(draw_info, {mid: draw_info.Selected_Color}, True)
+            draw_info.Font.render("Found on Position" + str(mid), 1, draw_info.Font_Color)
+            yield True
+            return arr[mid]
+    return -1
 
 
 def main():
     run = True
     clock = pygame.time.Clock()
+
+    x = 0
 
     n = 50
     min_value = 0
@@ -180,7 +164,7 @@ def main():
     Arr_Gen = None
 
     while run:
-        clock.tick(120)
+        clock.tick(60)
 
         if sorting:
             try:
@@ -188,7 +172,7 @@ def main():
             except StopIteration:
                 sorting = False
         else:
-            Draw(draw_info, algo_name, ascending)
+            Draw(draw_info, algo_name, ascending, x)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
@@ -198,6 +182,11 @@ def main():
 
             if event.key == pygame.K_PLUS:
                 n += 10
+                lst = Random_Arr(n, min_value, max_value, sine)
+                draw_info.Set_List(lst)
+                sorting = False
+            if event.key == pygame.K_MINUS:
+                n -= 10
                 lst = Random_Arr(n, min_value, max_value, sine)
                 draw_info.Set_List(lst)
                 sorting = False
@@ -212,14 +201,19 @@ def main():
                 sorting = False
             elif event.key == pygame.K_SPACE and sorting == False:
                 sorting = True
-                Arr_Gen = sorting_algo(draw_info, ascending)
+                if sorting_algo == B_Search:
+                    Arr_Gen = sorting_algo(draw_info, x, ascending)
+                else:
+                    Arr_Gen = sorting_algo(draw_info, ascending)
             elif event.key == pygame.K_a and not sorting:
                 ascending = True
             elif event.key == pygame.K_d and not sorting:
                 ascending = False
-            elif event.key == pygame.K_m and not sorting:
-                sorting_algo = Merge_Sort
-                algo_name = "Merge Sort"
+            elif event.key == pygame.K_n and not sorting:
+                x = rand.choice(arr)
+                arr.sort()
+                sorting_algo = B_Search
+                algo_name = "Binary Search"
             elif event.key == pygame.K_b and not sorting:
                 sorting_algo = Bubble_Sort
                 algo_name = "Bubble Sort"
